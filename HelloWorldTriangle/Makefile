@@ -1,9 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -g -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+CFLAGS = -Wall -g
+LDFLAGS = -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm
 all: main
 
 main: glad.o main.o
-	$(CC) $(CFLAGS) -o $@ main.o glad.o
+	$(CC) $(CFLAGS) -o $@ main.o glad.o $(LDFLAGS)
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o $@ $<

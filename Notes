@@ -19,6 +19,7 @@ GLAD:
 - basically it isn't a libarary or something which can be statically or dynamically linked
 - We have to store the function pointers that we want to call on and  then find those functions at runtime with the call wglGetProcAddress('function name')
 - GLAD is kind of a wrapper library which abstracts away the opengl function calls. We can call on these functions instead and not worry about finding the correct opengl function
+- add glad.c to your project and add the header to your include directory so that they can be used by any project
 
 Cmake: 
 - mkdir build, cd build, cmake ..

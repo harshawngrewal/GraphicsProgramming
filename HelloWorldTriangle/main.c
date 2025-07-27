@@ -17,11 +17,10 @@ void processInput(GLFWwindow *window)
 
 int main()
 {
-  //INSTATIATE A GLFW WINDOWS for opengl 3.3.  
-  //Looks like I am running older drivers with version 3.2
+  //INSTATIATE A GLFW WINDOWS for opengl 4.6.  
   glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow * window = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
@@ -33,14 +32,21 @@ int main()
     return -1;
   }
 
+  // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+  //     fprintf(stderr, "Failed to initialize GLAD\n");
+  //     return -1;
+  // }
+
   glfwMakeContextCurrent(window); //will display the windows on monitor
-  // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-  // glClear(GL_COLOR_BUFFER_BIT); //before display a frame, we wan't to clear the previous one
+  glClearColor(1, 0, 0, 1);
+  glClear(GL_COLOR_BUFFER_BIT); //before display a frame, we wan't to clear the previous one
 
   //render loop
   while(!glfwWindowShouldClose(window))
   {
     processInput(window);
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??)
   }

@@ -32,21 +32,18 @@ int main()
     return -1;
   }
 
-  // if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-  //     fprintf(stderr, "Failed to initialize GLAD\n");
-  //     return -1;
-  // }
-
   glfwMakeContextCurrent(window); //will display the windows on monitor
-  glClearColor(1, 0, 0, 1);
-  glClear(GL_COLOR_BUFFER_BIT); //before display a frame, we wan't to clear the previous one
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+      fprintf(stderr, "Failed to initialize GLAD\n");
+  }
 
   //render loop
   while(!glfwWindowShouldClose(window))
   {
     processInput(window);
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??)
   }

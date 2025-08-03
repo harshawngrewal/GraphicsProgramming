@@ -118,9 +118,10 @@ int main()
   //copy vertex data into the buffer
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  // Here we are describing the input vertices to the shader
+  // Here we are describing the format of the buffer of vertices to OpenGL. 
+  // based off this, OpenGL will run the shader with the proper input
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);  // the attribute of the vertex we are configuring is 'location'
+  glEnableVertexAttribArray(0);  // the attribute of the vertex we are configuring is 'position'
 
 
   //render loop
@@ -130,7 +131,8 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //specify the shader(fragment and vertex) to use, bind the VAO which points to the vertex attribute calls?
+    //specify the shader(fragment and vertex) to use
+    //bind the VAO which points to the vertex attribute calls and vertex object to pass into shader
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);

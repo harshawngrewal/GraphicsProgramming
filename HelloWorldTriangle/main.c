@@ -39,12 +39,23 @@ int main()
       fprintf(stderr, "Failed to initialize GLAD\n");
   }
     //vertices for simple triangle
-  float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
-  };
+  // float vertices[] = {
+  //   -0.5f, -0.5f, 0.0f,
+  //    0.5f, -0.5f, 0.0f,
+  //    0.0f,  0.5f, 0.0f
+  // };
 
+    //testing EBO to draw an rectangle
+  float vertices[] = {
+      0.5f,  0.5f, 0.0f,  // top right
+      0.5f, -0.5f, 0.0f,  // bottom right
+      -0.5f, -0.5f, 0.0f,  // bottom left
+      -0.5f,  0.5f, 0.0f   // top left 
+  };
+  unsigned int indices[] = {  // note that we start from 0!
+      0, 1, 3,   // first triangle
+      1, 2, 3    // second triangle
+  }; 
   //This shader is dynamically compiled at run-time from its source code
   //gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
   // This shader configure the position vertex attribute(location = 0)
@@ -58,6 +69,7 @@ int main()
   unsigned vertexShader;
   unsigned int VBO; // vertex buffer object. 
   unsigned int VAO; // vertex array object
+  unsigned int EBO; // element buffer objects
   int shaderCompileStatus = -1;
   
   //First step is compiling vertex shader
@@ -123,20 +135,34 @@ int main()
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);  // the attribute of the vertex we are configuring is 'position'
 
-
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   //render loop
+  int wireframe = 1;
   while(!glfwWindowShouldClose(window))
   {
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    if(wireframe)
+    {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      wireframe = 0;
+    }
+    else
+    {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      wireframe = 1;
+    }
+
     //specify the shader(fragment and vertex) to use
     //bind the VAO which points to the vertex attribute calls and vertex object to pass into shader
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
+    // glDrawArrays(GL_TRIANGLES, 0, 3); //draw triangle using 3 vertices starting from index 0 of current VAO and VBO
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
   }

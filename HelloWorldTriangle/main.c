@@ -1,6 +1,7 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include "stdio.h"
+#include <unistd.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
@@ -165,6 +166,7 @@ int main()
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
+    usleep(1000000);
   }
 
   glfwTerminate(); //cleanup allo glfw's resources including the opengl context that was allocated

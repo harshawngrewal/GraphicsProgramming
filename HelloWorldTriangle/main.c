@@ -3,6 +3,13 @@
 #include "stdio.h"
 #include <unistd.h>
 
+enum shape
+{
+  triangle,
+  rectangle,
+  wire_rectangle
+};
+
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
   glViewport(0, 0, new_width, new_height);
@@ -40,11 +47,6 @@ int main()
       fprintf(stderr, "Failed to initialize GLAD\n");
   }
     //vertices for simple triangle
-  // float vertices[] = {
-  //   -0.5f, -0.5f, 0.0f,
-  //    0.5f, -0.5f, 0.0f,
-  //    0.0f,  0.5f, 0.0f
-  // };
 
     //testing EBO to draw an rectangle
   float vertices[] = {
@@ -56,6 +58,9 @@ int main()
   unsigned int indices[] = {  // note that we start from 0!
       0, 1, 3,   // first triangle
       1, 2, 3    // second triangle
+  };
+  unsigned int indices_triangle[] = {  // note that we start from 0!
+      0, 1, 3,   // first triangle
   }; 
   //This shader is dynamically compiled at run-time from its source code
   //gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
@@ -70,7 +75,8 @@ int main()
   unsigned vertexShader;
   unsigned int VBO; // vertex buffer object. 
   unsigned int VAO; // vertex array object
-  unsigned int EBO; // element buffer objects
+  unsigned int EBO; // element buffer objects(rectangle)
+  unsigned int EBO2;// element buffer objects(triangle)
   int shaderCompileStatus = -1;
   
   //First step is compiling vertex shader
@@ -124,8 +130,8 @@ int main()
   
   glGenVertexArrays(1, &VAO);  
   glBindVertexArray(VAO);
-  glGenBuffers(1, &VBO);
   
+  glGenBuffers(1, &VBO);
   //here we are binding the VBO to the GL_ARRAY_BUFFER target, so any calls to the buffer type will be for VBO
   glBindBuffer(GL_ARRAY_BUFFER, VBO); 
   //copy vertex data into the buffer
@@ -139,31 +145,48 @@ int main()
   glGenBuffers(1, &EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+  glGenBuffers(1, &EBO2);
+  glUseProgram(shaderProgram);
+
   //render loop
-  int wireframe = 1;
+  enum shape s = triangle;
+
   while(!glfwWindowShouldClose(window))
   {
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    if(wireframe)
+    // printf("%d \n", s);
+    switch(s)
     {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      wireframe = 0;
-    }
-    else
-    {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      wireframe = 1;
+      case triangle:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        //want to bind the EBO specifying indices for rectangle
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_triangle), indices_triangle, GL_STATIC_DRAW);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        s = rectangle;
+        break;
+      case rectangle:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        //want to bind the EBO specifying indices for rectangle
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        s = wire_rectangle;
+        break;
+      case wire_rectangle:
+      default:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //want to bind the EBO specifying indices for rectangle
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        s = triangle;
+        break;
     }
 
-    //specify the shader(fragment and vertex) to use
-    //bind the VAO which points to the vertex attribute calls and vertex object to pass into shader
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 3); //draw triangle using 3 vertices starting from index 0 of current VAO and VBO
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
     usleep(1000000);

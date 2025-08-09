@@ -6,6 +6,7 @@
 enum shape
 {
   triangle,
+  triangle2,
   rectangle,
   wire_rectangle
 };
@@ -62,6 +63,10 @@ int main()
   unsigned int indices_triangle[] = {  // note that we start from 0!
       0, 1, 3,   // first triangle
   }; 
+
+  unsigned int indices_triangle2[] = {
+      4, 1, 2,   // second triangle
+  }; 
   //This shader is dynamically compiled at run-time from its source code
   //gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
   // This shader configure the position vertex attribute(location = 0)
@@ -77,6 +82,7 @@ int main()
   unsigned int VAO; // vertex array object
   unsigned int EBO; // element buffer objects(rectangle)
   unsigned int EBO2;// element buffer objects(triangle)
+  unsigned int EBO3;// element buffer objects(triangle)
   int shaderCompileStatus = -1;
   
   //First step is compiling vertex shader
@@ -147,6 +153,8 @@ int main()
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   glGenBuffers(1, &EBO2);
+  glGenBuffers(1, &EBO3);
+
   glUseProgram(shaderProgram);
 
   //render loop
@@ -165,7 +173,15 @@ int main()
         //want to bind the EBO specifying indices for rectangle
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_triangle), indices_triangle, GL_STATIC_DRAW);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        s = triangle2;
+        break;
+      case triangle2:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        //want to bind the EBO specifying indices for rectangle
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO3);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_triangle2), indices_triangle2, GL_STATIC_DRAW);
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         s = rectangle;
         break;
       case rectangle:

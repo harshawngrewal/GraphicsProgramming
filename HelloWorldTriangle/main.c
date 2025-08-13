@@ -105,10 +105,22 @@ int main()
   "{\n"
   "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
   "}\n";
+  const char* fragmentShaderSource2 = "#version 330 core\n"
+  "out vec4 FragColor;\n"
+  "void main()\n"
+  "{\n"
+  "    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+  "}\n";
   unsigned int fragmentShader;
   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
   glCompileShader(fragmentShader);
+
+  //not gonna verify if shader 2 compiled correctly
+  unsigned int fragmentShader2;
+  fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
+  glCompileShader(fragmentShader2);
 
   glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &shaderCompileStatus);
   
@@ -119,9 +131,15 @@ int main()
 
   //Last step is linking the two shaders together for final shader
   unsigned int shaderProgram = glCreateProgram();
+  unsigned int shaderProgram2 = glCreateProgram();
+
   glAttachShader(shaderProgram, vertexShader);
   glAttachShader(shaderProgram, fragmentShader);
   glLinkProgram(shaderProgram);
+
+  glAttachShader(shaderProgram2, vertexShader);
+  glAttachShader(shaderProgram2, fragmentShader2);
+  glLinkProgram(shaderProgram2);
 
   glGetShaderiv(shaderProgram, GL_COMPILE_STATUS, &shaderCompileStatus);
   
@@ -133,7 +151,8 @@ int main()
   //delete the individual shaders
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader); 
-  
+  glDeleteShader(fragmentShader2); 
+
   glGenVertexArrays(1, &VAO);  
   glBindVertexArray(VAO);
   
@@ -155,7 +174,6 @@ int main()
   glGenBuffers(1, &EBO2);
   glGenBuffers(1, &EBO3);
 
-  glUseProgram(shaderProgram);
 
   //render loop
   enum shape s = triangle;
@@ -169,6 +187,7 @@ int main()
     switch(s)
     {
       case triangle:
+        glUseProgram(shaderProgram);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         //want to bind the EBO specifying indices for rectangle
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
@@ -177,6 +196,7 @@ int main()
         s = triangle2;
         break;
       case triangle2:
+        glUseProgram(shaderProgram2);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         //want to bind the EBO specifying indices for rectangle
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO3);
@@ -185,6 +205,7 @@ int main()
         s = rectangle;
         break;
       case rectangle:
+        glUseProgram(shaderProgram);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         //want to bind the EBO specifying indices for rectangle
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -194,6 +215,7 @@ int main()
         break;
       case wire_rectangle:
       default:
+        glUseProgram(shaderProgram2);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         //want to bind the EBO specifying indices for rectangle
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

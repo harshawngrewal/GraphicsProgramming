@@ -1,7 +1,10 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include "stdio.h"
+#include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <string.h>
 
 enum shape
 {
@@ -24,6 +27,18 @@ void processInput(GLFWwindow *window)
   }
 }
 
+void detectTermination(GLFWwindow *window)
+{
+  while(1)
+  {
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+      glfwSetWindowShouldClose(window, 1);
+      return;
+    }
+  }
+}
+
 int main()
 {
   //INSTATIATE A GLFW WINDOWS for opengl 4.6.  
@@ -33,6 +48,7 @@ int main()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow * window = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
+  glfwSetWindowTitle(window, "FPS: ?? ");
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //callback set which will resize window
   
   if(window == NULL)
@@ -177,6 +193,9 @@ int main()
 
   //render loop
   enum shape s = triangle;
+  glfwSwapInterval(1); // enabled v-sync, so the the buffer swap happens after monitor refresh
+  int frameCount = 0;
+  double previousTime = glfwGetTime();
 
   while(!glfwWindowShouldClose(window))
   {
@@ -193,7 +212,10 @@ int main()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_triangle), indices_triangle, GL_STATIC_DRAW);
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-        s = triangle2;
+        if(frameCount % 160 > 40)
+        {
+          s = triangle2;
+        }
         break;
       case triangle2:
         glUseProgram(shaderProgram2);
@@ -202,7 +224,10 @@ int main()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO3);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_triangle2), indices_triangle2, GL_STATIC_DRAW);
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-        s = rectangle;
+        if(frameCount % 160 > 80)
+        {
+          s = rectangle;
+        }
         break;
       case rectangle:
         glUseProgram(shaderProgram);
@@ -211,7 +236,10 @@ int main()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        s = wire_rectangle;
+        if(frameCount % 160 > 120)
+        {
+          s = wire_rectangle;
+        }
         break;
       case wire_rectangle:
       default:
@@ -221,13 +249,29 @@ int main()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        s = triangle;
+        if(frameCount % 160 == 0)
+        {
+          s = triangle;
+        }
         break;
     }
 
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
-    usleep(1000000);
+    frameCount ++;
+
+    //calculate fps every second
+    double currentTime = glfwGetTime();
+    double delta = currentTime - previousTime;
+    if (delta >= 1.0) { 
+        int fps = (double)frameCount / delta;
+        char buffer[33];
+        memset(buffer, 33, 1);
+        sprintf(buffer, "FPS: %d", fps);
+        glfwSetWindowTitle(window, (const char *)(buffer));
+        frameCount = 0;
+        previousTime = currentTime;
+    }
   }
 
   glfwTerminate(); //cleanup allo glfw's resources including the opengl context that was allocated

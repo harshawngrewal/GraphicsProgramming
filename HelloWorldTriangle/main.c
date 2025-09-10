@@ -16,7 +16,7 @@ enum shape
 
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
-  glViewport(0, 0, new_width, new_height);
+  glViewport(0, 0, new_width/3, new_height);
 }
 
 void processInput(GLFWwindow *window)
@@ -39,6 +39,13 @@ void detectTermination(GLFWwindow *window)
   }
 }
 
+int fpsOverlay()
+{
+  //TODO: this will handle the render logic for the fps overlay
+  return 0;
+
+}
+
 int main()
 {
   //INSTATIATE A GLFW WINDOWS for opengl 4.6.  
@@ -48,6 +55,11 @@ int main()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow * window = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
+  GLFWwindow * window_fps = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
+
+  glfwSetWindowTitle(window_fps, "FPS: ?? ");
+  glfwSetFramebufferSizeCallback(window_fps, framebuffer_size_callback); //callback set which will resize window
+
   glfwSetWindowTitle(window, "FPS: ?? ");
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //callback set which will resize window
   

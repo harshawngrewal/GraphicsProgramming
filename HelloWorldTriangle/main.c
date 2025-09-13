@@ -14,6 +14,21 @@ enum shape
   wire_rectangle
 };
 
+float zeroVertices[] = {
+    // Outer rectangle
+    0.0f, 0.0f,0.0f,
+    1.0f, 0.0f,0.0f,
+    1.0f, 1.0f,0.0f,
+    0.0f, 1.0f,0.0f,
+
+    // Inner rectangle
+    0.25f, 0.25f,0.0f,
+    0.75f, 0.25f,0.0f,
+    0.75f, 0.75f,0.0f,
+    0.25f, 0.75f,0.0f
+};
+
+
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
   glViewport(0, 0, new_width/3, new_height);
@@ -42,8 +57,31 @@ void detectTermination(GLFWwindow *window)
 int fpsOverlay()
 {
   //TODO: this will handle the render logic for the fps overlay
-  return 0;
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+  GLFWwindow * window = glfwCreateWindow(800,600, "FPS OVERLAY", NULL, NULL);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //callback set which will resize window
+  
+  if(window == NULL)
+  {
+    printf("Failed to create GLFW windows\n");
+    glfwTerminate();
+    return -1;
+  }
+
+  glfwMakeContextCurrent(window); //will display the windows on monitor
+
+  while(!glfwWindowShouldClose(window))
+  {
+    processInput(window);
+
+  }
+
+  glfwTerminate();
+  return 0;
 }
 
 int main()
@@ -55,10 +93,9 @@ int main()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   GLFWwindow * window = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
-  GLFWwindow * window_fps = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
+  pthread_t thread1;
 
-  glfwSetWindowTitle(window_fps, "FPS: ?? ");
-  glfwSetFramebufferSizeCallback(window_fps, framebuffer_size_callback); //callback set which will resize window
+  int iret1 = pthread_create(&thread1, NULL, (void *)(void *)fpsOverlay, NULL);
 
   glfwSetWindowTitle(window, "FPS: ?? ");
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //callback set which will resize window
@@ -75,9 +112,8 @@ int main()
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
       fprintf(stderr, "Failed to initialize GLAD\n");
   }
-    //vertices for simple triangle
 
-    //testing EBO to draw an rectangle
+  // we use the same array for all shapes, just 
   float vertices[] = {
       0.5f,  0.5f, 0.0f,  // top right
       0.5f, -0.5f, 0.0f,  // bottom right
@@ -285,6 +321,9 @@ int main()
         previousTime = currentTime;
     }
   }
+
+  pthread_join(thread1, NULL);
+  printf("fps overlay window exited now %d\n", iret1);
 
   glfwTerminate(); //cleanup allo glfw's resources including the opengl context that was allocated
   return 0;

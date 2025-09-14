@@ -14,19 +14,28 @@ enum shape
   wire_rectangle
 };
 
-float zeroVertices[] = {
-    // Outer rectangle
-    0.0f, 0.0f,0.0f,
-    1.0f, 0.0f,0.0f,
-    1.0f, 1.0f,0.0f,
-    0.0f, 1.0f,0.0f,
 
-    // Inner rectangle
-    0.25f, 0.25f,0.0f,
-    0.75f, 0.25f,0.0f,
-    0.75f, 0.75f,0.0f,
-    0.25f, 0.75f,0.0f
-};
+//This shader is dynamically compiled at run-time from its source code
+//gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
+// This shader configure the position vertex attribute(location = 0)
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+const char* fragmentShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\n";
+const char* fragmentShaderSource2 = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"}\n";
 
 
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
@@ -56,6 +65,20 @@ void detectTermination(GLFWwindow *window)
 
 int fpsOverlay()
 {
+  float vertices[] = {
+      0.5f,  0.5f, 0.0f,  // top right
+      0.5f, -0.5f, 0.0f,  // bottom right
+      -0.5f, -0.5f, 0.0f,  // bottom left
+      -0.5f,  0.5f, 0.0f   // top left 
+  };
+  unsigned int indices[] = {  // note that we start from 0!
+      0, 1, 3,   // first triangle
+      1, 2, 3    // second triangle
+  };
+
+  unsigned int VBO; // vertex buffer object.
+  unsigned int EBO; // index buffer object. 
+
   //TODO: this will handle the render logic for the fps overlay
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -68,10 +91,24 @@ int fpsOverlay()
   if(window == NULL)
   {
     printf("Failed to create GLFW windows\n");
-    glfwTerminate();
+    glfwDestroyWindow(window);
     return -1;
   }
 
+  glGenBuffers(1, &VBO);
+  //here we are binding the VBO to the GL_ARRAY_BUFFER target, so any calls to the buffer type will be for VBO
+  glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+  //copy vertex data into the buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  // Here we are describing the format of the buffer of vertices to OpenGL. 
+  // based off this, OpenGL will run the shader with the proper input
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);  // the attribute of the vertex we are configuring is 'position'
+
+  glGenBuffers(1, &EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
   glfwMakeContextCurrent(window); //will display the windows on monitor
 
   while(!glfwWindowShouldClose(window))
@@ -80,7 +117,7 @@ int fpsOverlay()
 
   }
 
-  glfwTerminate();
+  glfwDestroyWindow(window);
   return 0;
 }
 
@@ -94,7 +131,6 @@ int main()
 
   GLFWwindow * window = glfwCreateWindow(800,600, "Testing Hello Triangle", NULL, NULL);
   pthread_t thread1;
-
   int iret1 = pthread_create(&thread1, NULL, (void *)(void *)fpsOverlay, NULL);
 
   glfwSetWindowTitle(window, "FPS: ?? ");
@@ -131,15 +167,6 @@ int main()
   unsigned int indices_triangle2[] = {
       4, 1, 2,   // second triangle
   }; 
-  //This shader is dynamically compiled at run-time from its source code
-  //gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
-  // This shader configure the position vertex attribute(location = 0)
-  const char *vertexShaderSource = "#version 330 core\n"
-      "layout (location = 0) in vec3 aPos;\n"
-      "void main()\n"
-      "{\n"
-      "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-      "}\0";
   
   unsigned vertexShader;
   unsigned int VBO; // vertex buffer object. 
@@ -163,18 +190,6 @@ int main()
 
   //second step is compiling the fragment shader
   // colour red
-  const char* fragmentShaderSource = "#version 330 core\n"
-  "out vec4 FragColor;\n"
-  "void main()\n"
-  "{\n"
-  "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-  "}\n";
-  const char* fragmentShaderSource2 = "#version 330 core\n"
-  "out vec4 FragColor;\n"
-  "void main()\n"
-  "{\n"
-  "    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
-  "}\n";
   unsigned int fragmentShader;
   fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);

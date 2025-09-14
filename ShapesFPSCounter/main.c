@@ -14,16 +14,26 @@ enum shape
   wire_rectangle
 };
 
+// we use the same array for all shapes, just 
+float vertices[] = {
+    0.5f,  0.5f, 0.0f,  // top right
+    0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left 
+      -0.5f,   0.0f, 0.0f,    // middle left
+    0.5f,   0.0f, 0.0f,    // middle right
+};
+
 
 //This shader is dynamically compiled at run-time from its source code
 //gl_position is the output of the vertex shader, it a 3d coordinate but also has a perspective division parameter
 // This shader configure the position vertex attribute(location = 0)
 const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
@@ -65,22 +75,19 @@ void detectTermination(GLFWwindow *window)
 
 int fpsOverlay()
 {
-  float vertices[] = {
-      0.5f,  0.5f, 0.0f,  // top right
-      0.5f, -0.5f, 0.0f,  // bottom right
-      -0.5f, -0.5f, 0.0f,  // bottom left
-      -0.5f,  0.5f, 0.0f   // top left 
-  };
-  unsigned int indices[] = {  // note that we start from 0!
-      0, 1, 3,   // first triangle
-      1, 2, 3    // second triangle
-  };
-
   unsigned int VBO; // vertex buffer object.
+  unsigned int VAO; // vertext array object.
   unsigned int EBO; // index buffer object. 
+  unsigned int vertexShader;
+  unsigned int fragmentShader;
+  int shaderCompileStatus;
+  unsigned int shaderProgram;
+
+  unsigned int indices[] = {  // note that we start from 0!
+      0,1,2,3,4,5
+  };
 
   //TODO: this will handle the render logic for the fps overlay
-  glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -94,6 +101,13 @@ int fpsOverlay()
     glfwDestroyWindow(window);
     return -1;
   }
+
+  glfwMakeContextCurrent(window); //will display the windows on monitor
+
+
+  // why is  this causing performance issues???
+  glGenVertexArrays(1, &VAO);  
+  glBindVertexArray(VAO);
 
   glGenBuffers(1, &VBO);
   //here we are binding the VBO to the GL_ARRAY_BUFFER target, so any calls to the buffer type will be for VBO
@@ -109,12 +123,62 @@ int fpsOverlay()
   glGenBuffers(1, &EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-  glfwMakeContextCurrent(window); //will display the windows on monitor
+
+  //First step is compiling vertex shader
+  vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+  glCompileShader(vertexShader);
+
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &shaderCompileStatus);
+
+  if(!shaderCompileStatus)
+  {
+    printf("Failed to compile shader\n");
+  }
+
+  //second step is compiling the fragment shader
+  // colour red
+  fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+  glCompileShader(fragmentShader);
+
+
+  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &shaderCompileStatus);
+  
+  if(!shaderCompileStatus)
+  {
+    printf("Failed to compile fragment shader\n");
+  }
+
+  //Last step is linking the two shaders together for final shader
+  shaderProgram = glCreateProgram();
+
+  glAttachShader(shaderProgram, vertexShader);
+  glAttachShader(shaderProgram, fragmentShader);
+  glLinkProgram(shaderProgram);
+
+  glGetShaderiv(shaderProgram, GL_COMPILE_STATUS, &shaderCompileStatus);
+  
+  if(!shaderCompileStatus)
+  {
+    printf("Failed to compile final shader\n");
+  }
+
+  glUseProgram(shaderProgram);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  //want to bind the EBO specifying indices for rectangle
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   while(!glfwWindowShouldClose(window))
   {
     processInput(window);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawArrays(  GL_LINE_LOOP, 0, 4);
 
+    glfwPollEvents();
+    glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
   }
 
   glfwDestroyWindow(window);
@@ -149,13 +213,6 @@ int main()
       fprintf(stderr, "Failed to initialize GLAD\n");
   }
 
-  // we use the same array for all shapes, just 
-  float vertices[] = {
-      0.5f,  0.5f, 0.0f,  // top right
-      0.5f, -0.5f, 0.0f,  // bottom right
-      -0.5f, -0.5f, 0.0f,  // bottom left
-      -0.5f,  0.5f, 0.0f   // top left 
-  };
   unsigned int indices[] = {  // note that we start from 0!
       0, 1, 3,   // first triangle
       1, 2, 3    // second triangle
@@ -243,6 +300,7 @@ int main()
 
   // Here we are describing the format of the buffer of vertices to OpenGL. 
   // based off this, OpenGL will run the shader with the proper input
+  // the vertex data is provided with float data type and x,y,z format(vec3)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);  // the attribute of the vertex we are configuring is 'position'
 

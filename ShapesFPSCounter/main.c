@@ -20,8 +20,36 @@ float vertices[] = {
     0.5f, -0.5f, 0.0f,  // bottom right
     -0.5f, -0.5f, 0.0f,  // bottom left
     -0.5f,  0.5f, 0.0f   // top left 
-      -0.5f,   0.0f, 0.0f,    // middle left
+};
+
+
+float vertices_digits0[] = {
+    -0.6f,  0.5f, 0.0f,  // top right
+    -0.6f, -0.5f, 0.0f,  // bottom right
+    -0.9f, -0.5f, 0.0f,  // bottom left
+    -0.9f,  0.5f, 0.0f,   // top left 
+    -0.9f,  0.0f, 0.0f,    // middle left
+    -0.6f,   0.0f, 0.0f,    // middle right
+    -0.6f,  0.5f, 0.0f,  // top right
+    -0.9f,  0.5f, 0.0f,   // top left 
+
+    0.0f,  0.5f, 0.0f,  // top right
+    0.0f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f,   // top left 
+    -0.5f,  0.0f, 0.0f,    // middle left
+    0.0f,   0.0f, 0.0f,    // middle right
+    0.0f,  0.5f, 0.0f,  // top right
+    -0.5f,  0.5f, 0.0f,   // top left 
+
+    0.5f,  0.5f, 0.0f,  // top right
+    0.5f, -0.5f, 0.0f,  // bottom right
+    0.0f, -0.5f, 0.0f,  // bottom left
+    0.0f,  0.5f, 0.0f,   // top left 
+    0.0f,  0.0f, 0.0f,    // middle left
     0.5f,   0.0f, 0.0f,    // middle right
+    0.5f,  0.5f, 0.0f,  // top right
+    0.0f,  0.5f, 0.0f,   // top left 
 };
 
 
@@ -76,6 +104,7 @@ void detectTermination(GLFWwindow *window)
 int fpsOverlay()
 {
   unsigned int VBO; // vertex buffer object.
+  unsigned int VBO2; // vertex buffer object.
   unsigned int VAO; // vertext array object.
   unsigned int EBO; // index buffer object. 
   unsigned int vertexShader;
@@ -84,7 +113,8 @@ int fpsOverlay()
   unsigned int shaderProgram;
 
   unsigned int indices[] = {  // note that we start from 0!
-      0,1,2,3,4,5
+      0,1,2,3,4,5,6,7, 
+      8,9,10,11,12,13,14,15
   };
 
   //TODO: this will handle the render logic for the fps overlay
@@ -104,16 +134,17 @@ int fpsOverlay()
 
   glfwMakeContextCurrent(window); //will display the windows on monitor
 
-
-  // why is  this causing performance issues???
   glGenVertexArrays(1, &VAO);  
   glBindVertexArray(VAO);
 
   glGenBuffers(1, &VBO);
+  glGenBuffers(1, &VBO2);
   //here we are binding the VBO to the GL_ARRAY_BUFFER target, so any calls to the buffer type will be for VBO
-  glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+  // glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+  glBindBuffer(GL_ARRAY_BUFFER, VBO2);
   //copy vertex data into the buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_digits0), vertices_digits0, GL_STATIC_DRAW);
+  // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_digits2), vertices_digits2, GL_STATIC_DRAW);
 
   // Here we are describing the format of the buffer of vertices to OpenGL. 
   // based off this, OpenGL will run the shader with the proper input
@@ -175,7 +206,7 @@ int fpsOverlay()
     processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(  GL_LINE_LOOP, 0, 4);
+    glDrawArrays( GL_LINE_LOOP, 0, 24);
 
     glfwPollEvents();
     glfwSwapBuffers(window); //swaps the back buffer with front buffer(double buffer technique??), to actually display to the buffer to screen
